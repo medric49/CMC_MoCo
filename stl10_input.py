@@ -32,10 +32,16 @@ DATA_DIR = './data'
 DATA_URL = 'http://ai.stanford.edu/~acoates/stl10/stl10_binary.tar.gz'
 
 # path to the binary train file with image data
-DATA_PATH = './data/stl10_binary/train_X.bin'
+TRAIN_DATA_PATH = './data/stl10_binary/train_X.bin'
 
 # path to the binary train file with labels
-LABEL_PATH = './data/stl10_binary/train_y.bin'
+TRAIN_LABEL_PATH = './data/stl10_binary/train_y.bin'
+
+# path to the binary train file with image data
+TEST_DATA_PATH = './data/stl10_binary/test_X.bin'
+
+# path to the binary train file with labels
+TEST_LABEL_PATH = './data/stl10_binary/test_y.bin'
 
 
 def read_labels(path_to_labels):
@@ -130,12 +136,12 @@ def download_and_extract():
         tarfile.open(filepath, 'r:gz').extractall(dest_directory)
 
 
-def save_images(images, labels):
+def save_images(images, labels, split):
     print("Saving images to disk")
     i = 0
     for image in images:
         label = labels[i]
-        directory = './img/' + str(label) + '/'
+        directory = './img/' + split + '/' + str(label) + '/'
         try:
             os.makedirs(directory, exist_ok=True)
         except OSError as exc:
@@ -151,17 +157,10 @@ if __name__ == "__main__":
     # download data if needed
     download_and_extract()
 
-    # test to check if the image is read correctly
-    with open(DATA_PATH) as f:
-        image = read_single_image(f)
-        plot_image(image)
+    images = read_all_images(TRAIN_DATA_PATH)
+    labels = read_labels(TRAIN_LABEL_PATH)
+    save_images(images, labels, 'train')
 
-    # test to check if the whole dataset is read correctly
-    images = read_all_images(DATA_PATH)
-    print(images.shape)
-
-    labels = read_labels(LABEL_PATH)
-    print(labels.shape)
-
-    # save images to disk
-    save_images(images, labels)
+    images = read_all_images(TEST_DATA_PATH)
+    labels = read_labels(TEST_LABEL_PATH)
+    save_images(images, labels, 'test')
