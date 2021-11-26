@@ -1,0 +1,5 @@
+
+num_negative_samples: 16384 # Number of negative samples
+temperature: 0.05 # Temperature in the critic function
+momentum: 0.5 # Memory update
+full_graph: true # Core view or full graph paradigm

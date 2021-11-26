@@ -1,2 +1,7 @@
 .idea
 __pycache__
+
+*.ipynb
+!*_example.ipynb
+data
+img
