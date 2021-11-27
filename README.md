@@ -15,7 +15,7 @@ $ python stl10_input.py
 ## Training
 
 * Check configs in ``cfgs/config.yaml``
-* Train the AlexNet encode
+* Train the AlexNet encoder
 ```shell
 $ python train
 ```
