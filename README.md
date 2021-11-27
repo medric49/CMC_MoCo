@@ -12,6 +12,17 @@ $ conda env create -f env.yml
 $ python stl10_input.py
 ```
 
+## Training
+
+* Check configs in ``cfgs/config.yaml``
+* Train the AlexNet encode
+```shell
+$ python train
+```
+* Show metric evolutions in tensorboard
+```shell
+$ tensorboard --logdir exp_local
+```
 
 ## Resources
 * [Contrastive Multiview Coding (CMC) paper](https://arxiv.org/abs/1906.05849)

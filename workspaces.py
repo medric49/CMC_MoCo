@@ -1,13 +1,13 @@
+from pathlib import Path
+
 import numpy as np
 import torch
+from tqdm import tqdm
 
 import datasets
 import utils
 from loggers import Logger
 from models import CMC
-from pathlib import Path
-from tqdm import tqdm
-import time
 
 
 class Workspace:
@@ -20,7 +20,7 @@ class Workspace:
 
         self.logger = Logger(self.work_dir, use_tb=self.cfg.use_tb)
         self.train_dataset, self.train_dataloader = datasets.load_stl10_train_data(cfg)
-        self.model = CMC(self.cfg).to(utils.device())
+        self.model = CMC(self.cfg, device=utils.device())
         self.global_epoch = 0
 
     def train(self):
@@ -29,20 +29,13 @@ class Workspace:
         train_until_epoch = utils.Until(self.cfg.num_epochs)
         while train_until_epoch(self.global_epoch):
             metrics = dict()
-
             epoch_losses = []
             loader = tqdm(self.train_dataloader)
-            loader.set_postfix({
-                'epoch': self.global_epoch
-            })
+            loader.set_postfix({'epoch': self.global_epoch})
             for images, labels in loader:
                 loss = self.model.update(images)
-                epoch_losses.append(loss.item())
-                loader.set_postfix({
-                    'epoch': self.global_epoch,
-                    'loss': np.mean(epoch_losses)
-                })
-
+                epoch_losses.append(loss)
+                loader.set_postfix({'epoch': self.global_epoch, 'loss': np.mean(epoch_losses)})
             epoch_loss = np.mean(epoch_losses)
             metrics['epoch_loss'] = epoch_loss
             self.logger.log_metrics(metrics, self.global_epoch, ty='train')

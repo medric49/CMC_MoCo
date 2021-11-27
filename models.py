@@ -121,11 +121,12 @@ class Normalize(nn.Module):
 
 
 class CMC:
-    def __init__(self, cfg):
+    def __init__(self, cfg, device):
         self.cfg = cfg
+        self.device = device
 
         self.encoders: List[HalfAlexNet] = [
-            HalfAlexNet(depth) for depth in self.cfg.colorspace.view_depths
+            HalfAlexNet(depth).to(device) for depth in self.cfg.colorspace.view_depths
         ]
 
         self.optimizers: List[torch.optim.Optimizer] = [
@@ -146,6 +147,7 @@ class CMC:
             encoder.eval()
 
     def to(self, device):
+        self.device = device
         for encoder in self.encoders:
             encoder.to(device)
         return self
@@ -154,7 +156,7 @@ class CMC:
         return self.encode(x, layer=layer, pool_type=pool_type, concat=True)
 
     def encode(self, x: torch.Tensor, layer=8, pool_type='max', concat=False):
-        x = x.to(dtype=torch.float)
+        x = x.to(device=self.device, dtype=torch.float)
         views_list = list(torch.split(x, list(self.cfg.colorspace.view_depths), dim=1))
         vectors_list = [self.encoders[i](views, layer=layer, pool_type=pool_type) for i, views in enumerate(views_list)]
         if concat:
@@ -171,12 +173,11 @@ class CMC:
 
     def update(self, x: torch.Tensor):
         self.zero_grad_optimizers()
-        x = x.to(device=utils.device(), dtype=torch.float)
         vectors_list = self.encode(x)
-        loss = self.full_graph_loss(vectors_list)
+        loss = self.full_graph_loss(vectors_list) if self.cfg.full_graph else self.core_view_loss(vectors_list)
         loss.backward()
         self.step_optimizers()
-        return loss
+        return loss.item()
 
     def _contrast_loss(self, vectors_1, vectors_2):
         i = random.randint(0, vectors_1.shape[0] - 1)
@@ -191,22 +192,16 @@ class CMC:
         return self._contrast_loss(vectors_1, vectors_2) + self._contrast_loss(vectors_2, vectors_1)
 
     def core_view_loss(self, vectors_list):
-        loss = None
+        loss = torch.tensor(0, dtype=torch.float, device=self.device)
         for i in range(1, len(vectors_list)):
-            if loss is None:
-                loss = self._two_view_loss(vectors_list[0], vectors_list[i])
-            else:
-                loss += self._two_view_loss(vectors_list[0], vectors_list[i])
+            loss += self._two_view_loss(vectors_list[0], vectors_list[i])
         return loss
 
     def full_graph_loss(self, vectors_list):
-        loss = None
+        loss = torch.tensor(0, dtype=torch.float, device=self.device)
         for i in range(len(vectors_list)-1):
             for j in range(i+1, len(vectors_list)):
-                if loss is None:
-                    loss = self._two_view_loss(vectors_list[i], vectors_list[j])
-                else:
-                    loss += self._two_view_loss(vectors_list[i], vectors_list[j])
+                loss += self._two_view_loss(vectors_list[i], vectors_list[j])
         return loss
 
 
