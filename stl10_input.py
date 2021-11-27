@@ -141,7 +141,7 @@ def save_images(images, labels, split):
     i = 0
     for image in images:
         label = labels[i]
-        directory = './img/' + split + '/' + str(label) + '/'
+        directory = './img/stl10/' + split + '/' + str(label) + '/'
         try:
             os.makedirs(directory, exist_ok=True)
         except OSError as exc:
