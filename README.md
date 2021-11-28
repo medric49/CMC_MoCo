@@ -5,11 +5,11 @@ Implementation of the algorithm Contrastive Multiview Coding (CMC) combined with
 
 * Install conda environment
 ```shell
-$ conda env create -f env.yml
+conda env create -f env.yml
 ```
 * Download STL-10 dataset
 ```shell
-$ python stl10_input.py
+python stl10_input.py
 ```
 
 ## Training
@@ -17,11 +17,11 @@ $ python stl10_input.py
 * Check configs in ``cfgs/config.yaml``
 * Train the AlexNet encoder
 ```shell
-$ python train
+python train
 ```
 * Show metric evolutions in tensorboard
 ```shell
-$ tensorboard --logdir exp_local
+tensorboard --logdir exp_local
 ```
 
 ## Resources
