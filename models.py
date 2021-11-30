@@ -139,7 +139,11 @@ class CMC:
             ) for encoder in self.encoders
         ]
 
-        self.criterion = SupConLoss('all' if self.cfg.full_graph else 'one')
+        self.criterion = SupConLoss(
+            contrast_mode='all' if self.cfg.full_graph else 'one',
+            temperature=self.cfg.temperature,
+            base_temperature=self.cfg.temperature
+        )
 
     def train(self):
         for encoder in self.encoders:
