@@ -36,7 +36,7 @@ python train
 tensorboard --logdir exp_local
 ```
 <p align="center">
-  <img src="figures/training.png" width="700">
+  <img src="figures/training.png" width="500" height="300">
 </p>
 
 ## Resources
