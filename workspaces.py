@@ -22,6 +22,7 @@ class Workspace:
         self.train_dataset, self.train_dataloader = datasets.load_stl10_train_data(cfg)
         self.model = CMC(self.cfg, device=utils.device())
         self.global_epoch = 0
+        self.global_min_loss = np.inf
 
     def train(self):
         self.model.train()
@@ -43,17 +44,30 @@ class Workspace:
             if self.cfg.save_snapshot:
                 self.save_snapshot()
 
+            if self.global_min_loss >= epoch_loss:
+                self.global_min_loss = epoch_loss
+                self.save_min_loss_snapshot()
             self.global_epoch += 1
 
     def save_snapshot(self):
         snapshot = self.work_dir / 'snapshot.pt'
-        keys_to_save = ['model', 'global_epoch']
+        keys_to_save = ['model', 'global_epoch', 'global_min_loss']
+        payload = {k: self.__dict__[k] for k in keys_to_save}
+        with snapshot.open('wb') as f:
+            torch.save(payload, f)
+
+    def save_min_loss_snapshot(self):
+        snapshot = self.work_dir / 'min_loss_snapshot.pt'
+        keys_to_save = ['model', 'global_epoch', 'global_min_loss']
         payload = {k: self.__dict__[k] for k in keys_to_save}
         with snapshot.open('wb') as f:
             torch.save(payload, f)
 
     def load_snapshot(self):
         snapshot = self.work_dir / 'snapshot.pt'
+        if not snapshot.exists():
+            snapshot = self.work_dir / 'min_loss_snapshot.pt'
+
         with snapshot.open('rb') as f:
             payload = torch.load(f)
         for k, v in payload.items():
