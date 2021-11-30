@@ -4,6 +4,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from typing import List
+from losses import SupConLoss
 
 import utils
 
@@ -138,6 +139,8 @@ class CMC:
             ) for encoder in self.encoders
         ]
 
+        self.criterion = SupConLoss('all' if self.cfg.full_graph else 'one')
+
     def train(self):
         for encoder in self.encoders:
             encoder.train()
@@ -174,7 +177,8 @@ class CMC:
     def update(self, x: torch.Tensor):
         self.zero_grad_optimizers()
         vectors_list = self.encode(x)
-        loss = self.full_graph_loss(vectors_list) if self.cfg.full_graph else self.core_view_loss(vectors_list)
+        loss = self.criterion(torch.stack(vectors_list, dim=1))
+        # loss = self.full_graph_loss(vectors_list) if self.cfg.full_graph else self.core_view_loss(vectors_list)
         loss.backward()
         self.step_optimizers()
         return loss.item()

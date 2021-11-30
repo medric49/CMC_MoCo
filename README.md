@@ -1,15 +1,27 @@
 # CMC_MoCo
-Implementation of the algorithm Contrastive Multiview Coding (CMC) combined with Momentum Contrast (MoCo) for self-supervised learning of images.
+This repo implement the algorithm Contrastive Multiview coding (CMC) combined with Momentum Contrast (MoCo).
+The final model is an image encoder which outputs vector of fixed sized (default 128).
 
-## Setup
+We use the [STL-10 dataset](https://cs.stanford.edu/~acoates/stl10/) to train the encoder. The backbone models used are AlexNet and ResNet-50.
+
+<p align="center">
+  <img src="figures/stl10.png" width="700">
+</p>
+
+We evaluate our encoder via a classification task on STL-10 test split by adding an MLP model at the top of our model. We also evaluate 
+the final classification score at different layers of the backbone model.
+
+
+
+## Installation
 
 * Install conda environment
 ```shell
-$ conda env create -f env.yml
+conda env create -f env.yml
 ```
 * Download STL-10 dataset
 ```shell
-$ python stl10_input.py
+python stl10_input.py
 ```
 
 ## Training
@@ -17,11 +29,11 @@ $ python stl10_input.py
 * Check configs in ``cfgs/config.yaml``
 * Train the AlexNet encoder
 ```shell
-$ python train
+python train
 ```
 * Show metric evolutions in tensorboard
 ```shell
-$ tensorboard --logdir exp_local
+tensorboard --logdir exp_local
 ```
 
 ## Resources
