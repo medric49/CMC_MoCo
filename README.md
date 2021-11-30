@@ -11,7 +11,7 @@ We use the [STL-10 dataset](https://cs.stanford.edu/~acoates/stl10/) to train th
 We evaluate our encoder via a classification task on STL-10 test split by adding an MLP model at the top of our model. We also evaluate 
 the final classification score at different layers of the backbone model.
 
-
+The encoder is adapted to be used with numerous colorspace having two or more views such as Lab, YDbDr, YPbPr.
 
 ## Installation
 
