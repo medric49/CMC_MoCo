@@ -41,7 +41,7 @@ tensorboard --logdir exp_local
 
 ## Acknowledgements
 This code is inspired by
-* Zhirong Wu's CMC [project](https://github.com/HobbitLong/CMC)
+* Yonglong Tian's CMC [project](https://github.com/HobbitLong/CMC)
 * Denis Yarats's RL agent [project](https://github.com/facebookresearch/drqv2)
 
 ## References
