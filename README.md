@@ -1,5 +1,5 @@
 # CMC_MoCo
-This repo implement the algorithm Contrastive Multiview coding (CMC) combined with Momentum Contrast (MoCo).
+This repo implements the algorithm Contrastive Multiview coding (CMC), originally implemented [here](https://github.com/HobbitLong/CMC/), combined with Momentum Contrast (MoCo).
 The final model is an image encoder which outputs vector of fixed sized (default 128).
 
 We use the [STL-10 dataset](https://cs.stanford.edu/~acoates/stl10/) to train the encoder. The backbone models used are AlexNet and ResNet-50.
