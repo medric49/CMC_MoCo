@@ -35,6 +35,9 @@ python train
 ```shell
 tensorboard --logdir exp_local
 ```
+<p align="center">
+  <img src="figures/training.png" width="700">
+</p>
 
 ## Resources
 * [Contrastive Multiview Coding (CMC) paper](https://arxiv.org/abs/1906.05849)
