@@ -39,7 +39,12 @@ tensorboard --logdir exp_local
   <img src="figures/training.png" width="500" height="300">
 </p>
 
-## Resources
+## Acknowledgements
+This code is inspired by
+* Zhirong Wu's CMC [project](https://github.com/HobbitLong/CMC)
+* Denis Yarats's RL agent [project](https://github.com/facebookresearch/drqv2)
+
+## References
 * [Contrastive Multiview Coding (CMC) paper](https://arxiv.org/abs/1906.05849)
 * [Momentum Contrast (MoCo) paper](https://arxiv.org/abs/1911.05722)
 * [Mastering Visual Continuous Control: Improved Data-Augmented Reinforcement Learning](https://arxiv.org/abs/2107.09645)
