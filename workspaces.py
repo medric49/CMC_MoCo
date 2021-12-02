@@ -88,7 +88,7 @@ class Workspace:
             epoch_score = np.sum(epoch_scores)/n_samples
             metrics['epoch_loss'] = epoch_loss
             metrics['epoch_score'] = epoch_score
-            self.logger.log_metrics(metrics, self.global_enc_epoch, ty='train_class')
+            self.logger.log_metrics(metrics, self.global_class_epoch, ty='train_class')
 
             if self.cfg.save_snapshot:
                 self.save_snapshot()
@@ -103,6 +103,11 @@ class Workspace:
             print('### ENCODER TRAINING')
             self.train_encoder()
 
+        snapshot = self.work_dir / 'enc_min_loss_snapshot.pt'
+        with snapshot.open('rb') as f:
+            payload = torch.load(f)
+        self.__dict__['encoder'] = payload['encoder']
+
         self.encoder.eval()
         self.encoder.required_grad(False)
 
@@ -112,24 +117,20 @@ class Workspace:
 
     def save_snapshot(self):
         snapshot = self.work_dir / 'snapshot.pt'
-        keys_to_save = ['encoder', 'global_enc_epoch', 'global_enc_min_loss', 'global_class_epoch', 'global_class_min_loss']
+        keys_to_save = ['encoder', 'global_enc_epoch', 'global_enc_min_loss', 'classifier', 'global_class_epoch', 'global_class_min_loss']
         payload = {k: self.__dict__[k] for k in keys_to_save}
         with snapshot.open('wb') as f:
             torch.save(payload, f)
 
     def save_min_loss_snapshot(self, ty):
         snapshot = self.work_dir / f'{ty}_min_loss_snapshot.pt'
-        keys_to_save = ['encoder', 'global_enc_epoch', 'global_enc_min_loss', 'global_class_epoch', 'global_class_min_loss']
+        keys_to_save = ['encoder', 'global_enc_epoch', 'global_enc_min_loss', 'classifier', 'global_class_epoch', 'global_class_min_loss']
         payload = {k: self.__dict__[k] for k in keys_to_save}
         with snapshot.open('wb') as f:
             torch.save(payload, f)
 
     def load_snapshot(self):
         snapshot = self.work_dir / 'snapshot.pt'
-        if not snapshot.exists():
-            snapshot = self.work_dir / 'class_min_loss_snapshot.pt'
-        if not snapshot.exists():
-            snapshot = self.work_dir / 'enc_min_loss_snapshot.pt'
 
         with snapshot.open('rb') as f:
             payload = torch.load(f)
