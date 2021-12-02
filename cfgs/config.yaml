@@ -12,7 +12,7 @@ image_size: 224
 crop: 0.5
 batch_size: 256 # Number of samples (number of negatives + 1)
 
-num_epochs: 80
+num_enc_epochs: 80
 lr: 0.001
 beta_1: 0.5
 beta_2: 0.999
@@ -21,6 +21,10 @@ weight_decay: 1e-4
 
 temperature: 0.05 # Temperature in the critic function
 full_graph: true # Core view or full graph paradigm
+
+num_class_epochs: 100
+
+layer: 5
 
 hydra:
   run:

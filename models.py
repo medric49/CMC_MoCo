@@ -1,5 +1,6 @@
 import random
 
+import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -8,6 +9,14 @@ from losses import SupConLoss
 
 import utils
 
+class LinearClassifier(nn.Module):
+    def __init__(self, in_features, out_features):
+        super(LinearClassifier, self).__init__()
+
+        self.fc_1 = nn.Linear(in_features=in_features, out_features=out_features)
+
+    def forward(self, x):
+        return self.fc_1(x)
 
 class HalfAlexNet(nn.Module):
     def __init__(self, in_channel=1, feat_dim=128):
@@ -91,7 +100,7 @@ class HalfAlexNet(nn.Module):
 
         x = self.conv_block_5(x)
         if layer == 5:
-            x = self.pool_flatten(x, pool_size=6, pool_type=pool_type)
+            x = torch.flatten(x, start_dim=1)
             return x
 
         x = x.view(x.shape[0], -1)
@@ -108,6 +117,25 @@ class HalfAlexNet(nn.Module):
         x = self.l2norm(x)
         return x
 
+    def output_dim(self, layer):
+        if layer == 1:
+            pool_size = 10
+            n_channels = 96
+        elif layer == 2:
+            pool_size = 6
+            n_channels = 256
+        elif layer == 3:
+            pool_size = 5
+            n_channels = 384
+        elif layer == 4:
+            pool_size = 5
+            n_channels = 384
+        elif layer == 5:
+            pool_size = 6
+            n_channels = 256
+        else:
+            raise NotImplementedError()
+        return n_channels * pool_size * pool_size // 2
 
 class Normalize(nn.Module):
 
@@ -153,13 +181,21 @@ class CMC:
         for encoder in self.encoders:
             encoder.eval()
 
+    def required_grad(self, value):
+        for encoder in self.encoders:
+            for param in encoder.parameters():
+                param.requires_grad = value
+
     def to(self, device):
         self.device = device
         for encoder in self.encoders:
             encoder.to(device)
         return self
 
-    def __call__(self, x: torch.Tensor, layer=8, pool_type='max'):
+    def output_dim(self, layer):
+        return self.encoders[0].output_dim(layer) * len(self.encoders)
+
+    def __call__(self, x: torch.Tensor, layer=5, pool_type='max'):
         return self.encode(x, layer=layer, pool_type=pool_type, concat=True)
 
     def encode(self, x: torch.Tensor, layer=8, pool_type='max', concat=False):
@@ -212,4 +248,42 @@ class CMC:
                 loss += self._two_view_loss(vectors_list[i], vectors_list[j])
         return loss
 
+
+class Classifier:
+    def __init__(self, cfg, device, feature_dim):
+        self.cfg = cfg
+        self.device = device
+
+        self.classifier = LinearClassifier(feature_dim, 10).to(self.device)
+
+        self.optimizer = torch.optim.Adam(
+            self.classifier.parameters(),
+            lr=self.cfg.lr,
+            betas=(self.cfg.beta_1, self.cfg.beta_2),
+        )
+
+        self.criterion = nn.CrossEntropyLoss()
+
+    def to(self, device):
+        self.device = device
+        self.classifier.to(device)
+
+    def update(self, x: torch.Tensor, y: torch.Tensor):
+        y = y.to(device=self.device, dtype=torch.long)
+        self.optimizer.zero_grad()
+        output = self.classifier(x)
+        loss = self.criterion(output, y)
+        loss.backward()
+        self.optimizer.step()
+
+        loss = loss.item()
+        score = ((output.argmax(dim=1) == y) * 1.).mean().item()
+
+        return loss, score
+
+    def train(self):
+        self.classifier.train()
+
+    def eval(self):
+        self.classifier.eval()
 
