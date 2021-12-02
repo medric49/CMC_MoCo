@@ -1,0 +1,4 @@
+color_space:
+  _target_: datasets.RGB2YPbPr
+
+view_depths: [1, 1, 1]

@@ -1,3 +1,4 @@
+import hydra.utils
 import numpy as np
 import torch
 import torch.utils.data
@@ -11,7 +12,7 @@ from hydra.utils import to_absolute_path
 def load_stl10_train_data(cfg):
     mean = cfg.im_norm_mean
     std = cfg.im_norm_std
-    color_transfer = RGB2Lab()
+    color_transfer = hydra.utils.instantiate(cfg.color_space)
     normalize = torchvision.transforms.Normalize(mean=mean, std=std)
 
     transform = torchvision.transforms.Compose([
