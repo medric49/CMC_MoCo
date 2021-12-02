@@ -1,0 +1,10 @@
+encoder:
+  _target_: nets.EfficientNet
+  feat_dim: 128
+
+image_size: 224
+batch_size: 16
+
+num_enc_epochs: 50
+
+layer: 15

@@ -23,3 +23,16 @@ class Until:
         if self._until is None:
             return True
         return step < self._until
+
+
+class Every:
+    def __init__(self, every):
+        self._every = every
+
+    def __call__(self, step):
+        if self._every is None:
+            return False
+        every = self._every
+        if step % every == 0:
+            return True
+        return False

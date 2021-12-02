@@ -1,0 +1,11 @@
+encoder:
+  _target_: nets.HalfAlexNet
+  feat_dim: 128
+  pool_type: 'max'
+
+image_size: 224
+batch_size: 256
+
+num_enc_epochs: 50
+
+layer: 5
