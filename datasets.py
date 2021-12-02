@@ -9,8 +9,8 @@ from hydra.utils import to_absolute_path
 
 
 def load_stl10_train_data(cfg):
-    mean = [(0 + 100) / 2, (-86.183 + 98.233) / 2, (-107.857 + 94.478) / 2]
-    std = [(100 - 0) / 2, (86.183 + 98.233) / 2, (107.857 + 94.478) / 2]
+    mean = cfg.im_norm_mean
+    std = cfg.im_norm_std
     color_transfer = RGB2Lab()
     normalize = torchvision.transforms.Normalize(mean=mean, std=std)
 
