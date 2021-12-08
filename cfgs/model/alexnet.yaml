@@ -6,7 +6,7 @@ encoder:
 image_size: 64
 batch_size: 256
 
-num_enc_epochs: 15
+num_enc_epochs: 50
 
 layer: 5
 

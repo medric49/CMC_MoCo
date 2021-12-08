@@ -13,11 +13,12 @@ lr: 0.001
 beta_1: 0.5
 beta_2: 0.999
 momentum: 0.5
+low_crop: 0.08
 
 temperature: 0.05 # Temperature in the critic function
 full_graph: true # Core view or full graph paradigm
 
-num_class_epochs: 15
+num_class_epochs: 150
 
 hydra:
   run:

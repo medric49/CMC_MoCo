@@ -20,6 +20,7 @@ class Workspace:
 
         self.logger = Logger(self.work_dir, use_tb=self.cfg.use_tb)
         self.train_dataset, self.train_dataloader = datasets.load_stl10_train_data(cfg)
+        self.valid_dataset, self.valid_dataloader = datasets.load_stl10_test_data(cfg)
         self.encoder = Encoder(self.cfg, device=utils.device())
         self.global_enc_epoch = 0
         self.global_enc_min_loss = np.inf
@@ -59,40 +60,60 @@ class Workspace:
             self.global_enc_epoch += 1
 
     def train_classifier(self):
-        self.classifier.train()
         train_class_until_epoch = utils.Until(self.cfg.num_class_epochs)
         while train_class_until_epoch(self.global_class_epoch):
             metrics = dict()
             n_samples = 0
-            epoch_losses = []
-            epoch_scores = []
-
+            train_epoch_losses = []
+            train_epoch_scores = []
             loader = tqdm(self.train_dataloader)
             loader.set_postfix({'epoch': self.global_class_epoch})
-
+            self.classifier.train()
             for images, labels in loader:
                 features = self.encoder(images, self.cfg.layer)
                 loss, score = self.classifier.update(features, labels)
 
                 n_samples += images.shape[0]
-                epoch_losses.append(loss * images.shape[0])
-                epoch_scores.append(score * images.shape[0])
+                train_epoch_losses.append(loss * images.shape[0])
+                train_epoch_scores.append(score * images.shape[0])
                 loader.set_postfix({
                     'epoch': self.global_class_epoch,
-                    'loss': np.sum(epoch_losses)/n_samples,
-                    'score': np.sum(epoch_scores)/n_samples
+                    'loss': np.sum(train_epoch_losses)/n_samples,
+                    'score': np.sum(train_epoch_scores)/n_samples
                 })
+            train_epoch_loss = np.sum(train_epoch_losses) / n_samples
+            train_epoch_score = np.sum(train_epoch_scores) / n_samples
+            metrics['epoch_loss'] = train_epoch_loss
+            metrics['epoch_score'] = train_epoch_score
 
-            epoch_loss = np.sum(epoch_losses)/n_samples
-            epoch_score = np.sum(epoch_scores)/n_samples
-            metrics['epoch_loss'] = epoch_loss
-            metrics['epoch_score'] = epoch_score
+            n_samples = 0
+            valid_epoch_losses = []
+            valid_epoch_scores = []
+            loader = tqdm(self.valid_dataloader, colour='green')
+            loader.set_postfix({'epoch': self.global_class_epoch})
+            self.classifier.eval()
+            for images, labels in loader:
+                features = self.encoder(images, self.cfg.layer)
+                loss, score = self.classifier.evaluate(features, labels)
+
+                n_samples += images.shape[0]
+                valid_epoch_losses.append(loss * images.shape[0])
+                valid_epoch_scores.append(score * images.shape[0])
+                loader.set_postfix({
+                    'epoch': self.global_class_epoch,
+                    'loss': np.sum(valid_epoch_losses) / n_samples,
+                    'score': np.sum(valid_epoch_scores) / n_samples
+                })
+            valid_epoch_loss = np.sum(valid_epoch_losses) / n_samples
+            valid_epoch_score = np.sum(valid_epoch_scores) / n_samples
+            metrics['valid_epoch_loss'] = valid_epoch_loss
+            metrics['valid_epoch_score'] = valid_epoch_score
+
             self.logger.log_metrics(metrics, self.global_class_epoch, ty='train_class')
-
             if self.cfg.save_snapshot:
                 self.save_snapshot()
-            if self.global_class_min_loss >= epoch_loss:
-                self.global_class_min_loss = epoch_loss
+            if self.global_class_min_loss >= valid_epoch_loss:
+                self.global_class_min_loss = valid_epoch_loss
                 self.save_min_loss_snapshot(ty='class')
 
             self.global_class_epoch += 1

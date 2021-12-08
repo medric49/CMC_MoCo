@@ -137,6 +137,14 @@ class Classifier:
 
         return loss, score
 
+    def evaluate(self, x: torch.Tensor, y: torch.Tensor):
+        y = y.to(device=self.device, dtype=torch.long)
+        output = self.classifier(x)
+        loss = self.criterion(output, y)
+        loss = loss.item()
+        score = ((output.argmax(dim=1) == y) * 1.).mean().item()
+        return loss, score
+
     def train(self):
         self.classifier.train()
 
