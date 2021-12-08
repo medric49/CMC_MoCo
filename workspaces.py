@@ -19,7 +19,8 @@ class Workspace:
         utils.set_seed_everywhere(self.cfg.seed)
 
         self.logger = Logger(self.work_dir, use_tb=self.cfg.use_tb)
-        self.train_dataset, self.train_dataloader = datasets.load_stl10_train_data(cfg)
+        self.enc_train_dataset, self.enc_train_dataloader = datasets.load_stl10_enc_train_data(cfg)
+        self.class_train_dataset, self.class_train_dataloader = datasets.load_stl10_class_train_data(cfg)
         self.valid_dataset, self.valid_dataloader = datasets.load_stl10_test_data(cfg)
         self.encoder = Encoder(self.cfg, device=utils.device())
         self.global_enc_epoch = 0
@@ -36,7 +37,7 @@ class Workspace:
             metrics = dict()
             n_samples = 0
             epoch_losses = []
-            loader = tqdm(self.train_dataloader)
+            loader = tqdm(self.enc_train_dataloader)
             loader.set_postfix({'epoch': self.global_enc_epoch})
             for images, labels in loader:
                 loss = self.encoder.update(images)
@@ -66,7 +67,7 @@ class Workspace:
             n_samples = 0
             train_epoch_losses = []
             train_epoch_scores = []
-            loader = tqdm(self.train_dataloader)
+            loader = tqdm(self.class_train_dataloader)
             loader.set_postfix({'epoch': self.global_class_epoch})
             self.classifier.train()
             for images, labels in loader:
@@ -137,14 +138,20 @@ class Workspace:
 
     def save_snapshot(self):
         snapshot = self.work_dir / 'snapshot.pt'
-        keys_to_save = ['encoder', 'global_enc_epoch', 'global_enc_min_loss', 'classifier', 'global_class_epoch', 'global_class_min_loss']
+        keys_to_save = [
+            'encoder', 'global_enc_epoch', 'global_enc_min_loss',
+            'classifier', 'global_class_epoch', 'global_class_min_loss'
+        ]
         payload = {k: self.__dict__[k] for k in keys_to_save}
         with snapshot.open('wb') as f:
             torch.save(payload, f)
 
     def save_min_loss_snapshot(self, ty):
         snapshot = self.work_dir / f'{ty}_min_loss_snapshot.pt'
-        keys_to_save = ['encoder', 'global_enc_epoch', 'global_enc_min_loss', 'classifier', 'global_class_epoch', 'global_class_min_loss']
+        keys_to_save = [
+            'encoder', 'global_enc_epoch', 'global_enc_min_loss',
+            'classifier', 'global_class_epoch', 'global_class_min_loss'
+        ]
         payload = {k: self.__dict__[k] for k in keys_to_save}
         with snapshot.open('wb') as f:
             torch.save(payload, f)
