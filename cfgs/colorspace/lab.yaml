@@ -1,4 +1,4 @@
-color_space:
-  _target_: datasets.RGB2Lab
+translator:
+  _target_: colorspaces.RGB2Lab
 
 view_depths: [1, 2]

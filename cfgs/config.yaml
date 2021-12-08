@@ -1,6 +1,6 @@
 defaults:
   - colorspace: lab
-  - model@_global_: efficientnet
+  - model@_global_: alexnet
   - _self_
 
 seed: 1

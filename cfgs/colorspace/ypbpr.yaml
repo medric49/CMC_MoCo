@@ -1,4 +1,4 @@
-color_space:
-  _target_: datasets.RGB2YPbPr
+translator:
+  _target_: colorspaces.RGB2YPbPr
 
 view_depths: [1, 1, 1]
