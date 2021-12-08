@@ -33,7 +33,7 @@ def load_stl10_class_train_data(cfg):
     normalize = torchvision.transforms.Normalize(mean=cfg.im_norm_mean, std=cfg.im_norm_std)
 
     transform = torchvision.transforms.Compose([
-        # torchvision.transforms.RandomResizedCrop(cfg.image_size, scale=(cfg.low_crop, 1.0)),
+        torchvision.transforms.Resize(cfg.image_size),
         torchvision.transforms.RandomHorizontalFlip(),
         color_transfer,
         torchvision.transforms.ToTensor(),
