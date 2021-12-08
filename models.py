@@ -9,7 +9,7 @@ from losses import SupConLoss
 from nets import LinearClassifier
 
 
-class CMC:
+class Encoder:
     def __init__(self, cfg, device):
         self.cfg = cfg
         self.device = device
@@ -22,8 +22,7 @@ class CMC:
             torch.optim.Adam(
                 encoder.parameters(),
                 lr=self.cfg.lr,
-                betas=(self.cfg.beta_1, self.cfg.beta_2),
-                weight_decay=self.cfg.weight_decay
+                betas=(self.cfg.beta_1, self.cfg.beta_2)
             ) for encoder in self.encoders
         ]
 

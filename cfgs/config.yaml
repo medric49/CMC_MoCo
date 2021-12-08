@@ -9,13 +9,10 @@ save_snapshot: true
 
 stl10_dataset_path: ./img/stl10
 
-crop: 0.5
-
 lr: 0.001
 beta_1: 0.5
 beta_2: 0.999
-momentum: 0.9
-weight_decay: 1e-4
+momentum: 0.5
 
 temperature: 0.05 # Temperature in the critic function
 full_graph: true # Core view or full graph paradigm

@@ -7,8 +7,7 @@ from tqdm import tqdm
 import datasets
 import utils
 from loggers import Logger
-import time
-from models import CMC, Classifier
+from models import Encoder, Classifier
 
 
 class Workspace:
@@ -21,7 +20,7 @@ class Workspace:
 
         self.logger = Logger(self.work_dir, use_tb=self.cfg.use_tb)
         self.train_dataset, self.train_dataloader = datasets.load_stl10_train_data(cfg)
-        self.encoder = CMC(self.cfg, device=utils.device())
+        self.encoder = Encoder(self.cfg, device=utils.device())
         self.global_enc_epoch = 0
         self.global_enc_min_loss = np.inf
 

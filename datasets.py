@@ -1,13 +1,10 @@
-import os
+from pathlib import Path
 
 import hydra.utils
 import torch
 import torch.utils.data
 import torchvision
-from pathlib import Path
 from hydra.utils import to_absolute_path
-
-import colorspaces
 
 
 def load_stl10_train_data(cfg):
@@ -17,7 +14,7 @@ def load_stl10_train_data(cfg):
     normalize = torchvision.transforms.Normalize(mean=mean, std=std)
 
     transform = torchvision.transforms.Compose([
-        torchvision.transforms.RandomResizedCrop(cfg.image_size, scale=(cfg.crop, 1.)),
+        torchvision.transforms.RandomCrop(cfg.image_size),
         torchvision.transforms.RandomHorizontalFlip(),
         color_transfer,
         torchvision.transforms.ToTensor(),

@@ -18,56 +18,61 @@ class Normalize(nn.Module):
 class LinearClassifier(nn.Module):
     def __init__(self, in_features, out_features):
         super(LinearClassifier, self).__init__()
-        self.fc_1 = nn.Linear(in_features=in_features, out_features=out_features)
+        self.net = nn.Sequential(
+            nn.Linear(in_features, 100),
+            nn.BatchNorm1d(100),
+            nn.ReLU(),
+            nn.Linear(100, out_features),
+        )
 
     def forward(self, x):
-        return self.fc_1(x)
+        return self.net(x)
 
 
 class HalfAlexNet(nn.Module):
-    def __init__(self, in_channel=1, feat_dim=128, pool_type='max'):
+    def __init__(self, in_channel, feat_dim, pool_type):
         super(HalfAlexNet, self).__init__()
         self.pool_type = pool_type
         self.conv_block_1 = nn.Sequential(
-            nn.Conv2d(in_channel, 96 // 2, 11, 4, 2, bias=False),  # 224 -> 111
-            nn.BatchNorm2d(96 // 2),
+            nn.Conv2d(in_channel, 48, 3, 1, 1, bias=False),  # 64 -> 64
+            nn.BatchNorm2d(48),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(3, 2),  # 111 -> 55
+            nn.MaxPool2d(3, 2),  # 64 -> 31
         )
         self.conv_block_2 = nn.Sequential(
-            nn.Conv2d(96 // 2, 256 // 2, 5, 1, 2, bias=False),  # 55 -> 27
-            nn.BatchNorm2d(256 // 2),
+            nn.Conv2d(48, 96, 3, 1, 1, bias=False),  # 31 -> 31
+            nn.BatchNorm2d(96),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(3, 2),  # 27 -> 13
+            nn.MaxPool2d(3, 2),  # 31 -> 15
         )
         self.conv_block_3 = nn.Sequential(
-            nn.Conv2d(256 // 2, 384 // 2, 3, 1, 1, bias=False),  # 13 -> 13
-            nn.BatchNorm2d(384 // 2),
+            nn.Conv2d(96, 192, 3, 1, 1, bias=False),  # 15 -> 15
+            nn.BatchNorm2d(192),
             nn.ReLU(inplace=True),
         )
         self.conv_block_4 = nn.Sequential(
-            nn.Conv2d(384 // 2, 384 // 2, 3, 1, 1, bias=False),  # 13 -> 13
-            nn.BatchNorm2d(384 // 2),
+            nn.Conv2d(192, 192, 3, 1, 1, bias=False),  # 15 -> 15
+            nn.BatchNorm2d(192),
             nn.ReLU(inplace=True),
         )
         self.conv_block_5 = nn.Sequential(
-            nn.Conv2d(384 // 2, 256 // 2, 3, 1, 1, bias=False),  # 13 -> 13
-            nn.BatchNorm2d(256 // 2),
+            nn.Conv2d(192, 96, 3, 1, 1, bias=False),  # 15 -> 15
+            nn.BatchNorm2d(96),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(3, 2),  # 13 ->  6
+            nn.MaxPool2d(3, 2),  # 15 ->  7
         )
         self.fc6 = nn.Sequential(
-            nn.Linear(256 * 6 * 6 // 2, 4096 // 2),
-            nn.BatchNorm1d(4096 // 2),
+            nn.Linear(96 * 7 * 7, 2048),
+            nn.BatchNorm1d(2048),
             nn.ReLU(inplace=True),
         )
         self.fc7 = nn.Sequential(
-            nn.Linear(4096 // 2, 4096 // 2),
-            nn.BatchNorm1d(4096 // 2),
+            nn.Linear(2048, 2048),
+            nn.BatchNorm1d(2048),
             nn.ReLU(inplace=True),
         )
         self.fc8 = nn.Sequential(
-            nn.Linear(4096 // 2, feat_dim)
+            nn.Linear(2048, feat_dim)
         )
         self.l2norm = Normalize(2)
 
@@ -84,12 +89,12 @@ class HalfAlexNet(nn.Module):
     def forward(self, x, layer):
         x = self.conv_block_1(x)
         if layer == 1:
-            x = self.pool_flatten(x, pool_size=10)
+            x = self.pool_flatten(x, pool_size=15)
             return x
 
         x = self.conv_block_2(x)
         if layer == 2:
-            x = self.pool_flatten(x, pool_size=6)
+            x = self.pool_flatten(x, pool_size=10)
             return x
 
         x = self.conv_block_3(x)
@@ -103,11 +108,9 @@ class HalfAlexNet(nn.Module):
             return x
 
         x = self.conv_block_5(x)
+        x = torch.flatten(x, start_dim=1)
         if layer == 5:
-            x = torch.flatten(x, start_dim=1)
             return x
-
-        x = x.view(x.shape[0], -1)
 
         x = self.fc6(x)
         if layer == 6:
@@ -123,27 +126,27 @@ class HalfAlexNet(nn.Module):
 
     def output_dim(self, layer):
         if layer == 1:
+            pool_size = 15
+            n_channels = 48
+        elif layer == 2:
             pool_size = 10
             n_channels = 96
-        elif layer == 2:
-            pool_size = 6
-            n_channels = 256
         elif layer == 3:
             pool_size = 5
-            n_channels = 384
+            n_channels = 192
         elif layer == 4:
             pool_size = 5
-            n_channels = 384
+            n_channels = 192
         elif layer == 5:
-            pool_size = 6
-            n_channels = 256
+            pool_size = 7
+            n_channels = 96
         else:
             raise NotImplementedError()
-        return n_channels * pool_size * pool_size // 2
+        return n_channels * pool_size * pool_size
 
 
 class EfficientNet(nn.Module):
-    def __init__(self, in_channel=1, feat_dim=128):
+    def __init__(self, in_channel, feat_dim):
         super(EfficientNet, self).__init__()
         self.in_channels = in_channel
         self.feat_dim = feat_dim
