@@ -20,7 +20,9 @@ full_graph: true # Core view or full graph paradigm
 
 num_class_epochs: 150
 
+exp_group: ${now:%Y.%m.%d}
+exp_id: ${now:%H%M%S}
 hydra:
   run:
-    dir: ./exp_local/${now:%Y.%m.%d}/${now:%H%M%S}_${hydra.job.override_dirname}
+    dir: ./exp_local/${exp_group}/${exp_id}
     # dir: ./exp_local/2021.12.02/012242_
