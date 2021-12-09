@@ -22,6 +22,7 @@ class Workspace:
         self.enc_train_dataset, self.enc_train_dataloader = datasets.load_stl10_enc_train_data(cfg)
         self.class_train_dataset, self.class_train_dataloader = datasets.load_stl10_class_train_data(cfg)
         self.valid_dataset, self.valid_dataloader = datasets.load_stl10_test_data(cfg)
+
         self.encoder = Encoder(self.cfg, device=utils.device())
         self.global_enc_epoch = 0
         self.global_enc_min_loss = np.inf
@@ -94,7 +95,8 @@ class Workspace:
             loader.set_postfix({'epoch': self.global_class_epoch})
             self.classifier.eval()
             for images, labels in loader:
-                features = self.encoder(images, self.cfg.layer)
+                with torch.no_grad():
+                    features = self.encoder(images, self.cfg.layer)
                 loss, score = self.classifier.evaluate(features, labels)
 
                 n_samples += images.shape[0]
@@ -130,7 +132,12 @@ class Workspace:
         self.__dict__['encoder'] = payload['encoder']
 
         self.encoder.eval()
-        self.encoder.required_grad(False)
+
+        if self.cfg.reset_classifier:
+            self.classifier = Classifier(self.cfg, device=utils.device(),
+                                         feature_dim=self.encoder.output_dim(self.cfg.layer))
+            self.global_class_epoch = 0
+            self.global_class_min_loss = np.inf
 
         if self.global_class_epoch < self.cfg.num_class_epochs:
             print('### CLASSIFIER TRAINING ###')

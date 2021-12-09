@@ -20,6 +20,8 @@ full_graph: true # Core view or full graph paradigm
 
 num_class_epochs: 150
 
+reset_classifier: false
+
 exp_group: ${now:%Y.%m.%d}
 exp_id: ${now:%H%M%S}
 hydra:

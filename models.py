@@ -40,11 +40,6 @@ class Encoder:
         for encoder in self.encoders:
             encoder.eval()
 
-    def required_grad(self, value):
-        for encoder in self.encoders:
-            for param in encoder.parameters():
-                param.requires_grad = value
-
     def to(self, device):
         self.device = device
         for encoder in self.encoders:
