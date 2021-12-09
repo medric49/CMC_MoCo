@@ -140,6 +140,10 @@ class HalfAlexNet(nn.Module):
         elif layer == 5:
             pool_size = 7
             n_channels = 96
+        elif layer == 6:
+            return 2048
+        elif layer == 7:
+            return 2048
         else:
             raise NotImplementedError()
         return n_channels * pool_size * pool_size
