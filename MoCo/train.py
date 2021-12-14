@@ -15,12 +15,12 @@ import util
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(dev)
 
-''' ######################## < Step 1 > Parsing training arguments ######################## '''
+# Parsing training arguments
 
 parser = argparse.ArgumentParser()
 
 # Config - Path
-parser.add_argument('--dataset_root', type=str, default='/datasets/STL-10/train',
+parser.add_argument('--dataset_root', type=str, default='/datasets/STL-10',
                     help='Root directory of dataset.')
 parser.add_argument('--output_root', type=str, default='output',
                     help='Root directory of training results.')
@@ -41,9 +41,9 @@ parser.add_argument('--weight_decay', type=float, default=0.0001,
 parser.add_argument('--temperature', type=float, default=0.07,
                     help='Temperature for constrastive loss.')
 parser.add_argument('--momentum', type=float, default=0.999,
-                    help='Momentum of momentum encoder. m in Eq.(2). It is not the momentum of SGD optimizer.')
+                    help='Momentum of momentum encoder.')
 parser.add_argument('--shuffle_bn', action='store_true',
-                    help='Turn on shuffled batch norm. See Section 3.3.')
+                    help='Turn on shuffled batch norm.')
 
 # Config - Architecture
 parser.add_argument('--feature_dim', type=int, default=128,
@@ -55,19 +55,19 @@ parser.add_argument('--num_keys', type=int, default=4096,
 parser.add_argument('--resize', type=int, default=84,
                     help='Image is resized to this value.')
 parser.add_argument('--crop', type=int, default=64,
-                    help='Image is cropped to this value. This is the final size of image transformation.')
-parser.add_argument('--max_epoch', type=int, default=50000,
+                    help='Image is cropped to this value.')
+parser.add_argument('--max_epoch', type=int, default=100,
                     help='Maximum epoch to train an encoder.')
 parser.add_argument('--eval_epoch', type=int, default=10,
                     help='Frequency of evaluate an encoder.')
-parser.add_argument('--plot_iter', type=int, default=1000,
+parser.add_argument('--plot_iter', type=int, default=100,
                     help='Frequency of plot loss graph.')
 parser.add_argument('--save_weight_epoch', type=int, default=10,
                     help='Frequency of saving weight.')
 parser.add_argument('--num_workers', type=int, default=4,
                     help='Number of workers for data loader.')
 parser.add_argument('--save_config', action='store_true',
-                    help='Save training configuration. It requires PyYAML.')
+                    help='Save training configuration')
 
 
 parser.add_argument('--resume', action='store_true',
@@ -101,10 +101,10 @@ if config.save_config:
         yaml.dump(args_yaml, fp, default_flow_style=True)
     
     
-''' ######################## < Step 2 > Create instances ######################## '''
+'''Create instances now...'''
 
 # Build dataloader
-print('\n[1 / 3]. Build data loader. Depending on your environment, this may take several minutes..')
+print('\n[1 / 3] Building data loader...')
 dloader, dlen = data_loader(dataset_root=config.dataset_root,
                             resize=config.resize, 
                             crop=config.crop, 
@@ -113,7 +113,7 @@ dloader, dlen = data_loader(dataset_root=config.dataset_root,
                             type='encoder_train')
 
 # Build models
-print('\n[2 / 3]. Build models.. ')
+print('\n[2 / 3] Build models... ')
 encoder = nn.DataParallel(model.Resnet50(dim=config.feature_dim)).to(dev)
 momentum_encoder = nn.DataParallel(model.Resnet50(dim=config.feature_dim)).to(dev)
 
@@ -146,11 +146,10 @@ optimizer = optim.SGD(encoder.parameters(),
 # Loss function
 crossentropy = nn.CrossEntropyLoss()
 
-''' ######################## < Step 3 > Define methods ######################## '''
 
 def momentum_step(m=1):
     '''
-    Momentum step (Eq (2)).
+    Equation 2 from the paper
 
     Args:
         - m (float): momentum value. 1) m = 0 -> copy parameter of encoder to key encoder
@@ -187,14 +186,13 @@ def update_lr(epoch):
         param_group['lr'] = lr
 
 
-''' ######################## < Step 4 > Start training ######################## '''
-
 # Initialize momentum_encoder with parameters of encoder.
 momentum_step(m=0)
 
 # Initialize queue.
-print('\n[3 / 3]. Initializing a queue with %d keys.' % config.num_keys)
+print('\n[3 / 3] Initializing a queue with %d keys.' % config.num_keys)
 queue = []
+
 with torch.no_grad():
     for i, (_, img, _) in enumerate(dloader):
         key_feature = momentum_encoder(img.to(dev))

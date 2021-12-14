@@ -13,8 +13,11 @@ import torchvision.transforms.functional as F
 import numpy as np
 from typing import Any, Callable, Optional, Tuple
 
-from torchvision.utils import check_integrity, download_and_extract_archive, verify_str_arg
+from torchvision.datasets.utils import check_integrity, download_and_extract_archive, verify_str_arg
 
+
+# The following class STL10_train is the method derived from torch.datasets and modified in such a way that it outputs two different augmentations of the image instead of one. 
+# The modification is made in __getitem__ function
 
 class STL10_train(VisionDataset):
     """`STL10 <https://cs.stanford.edu/~acoates/stl10/>`_ Dataset.
@@ -62,7 +65,7 @@ class STL10_train(VisionDataset):
             target_transform: Optional[Callable] = None,
             download: bool = False,
     ) -> None:
-        super(STL10, self).__init__(root, transform=transform,
+        super(STL10_train, self).__init__(root, transform=transform,
                                     target_transform=target_transform)
         self.split = verify_str_arg(split, "split", self.splits)
         self.folds = self._verify_folds(folds)
@@ -122,7 +125,7 @@ class STL10_train(VisionDataset):
             index (int): Index
 
         Returns:
-            tuple: (image, target) where target is index of the target class.
+            tuple: (augmented_image_1, augmented_image_2, target) where target is index of the target class.
         """
         target: Optional[int]
         if self.labels is not None:
@@ -197,7 +200,7 @@ class STL10_train(VisionDataset):
                 self.labels = self.labels[list_idx]
 
 
-def data_loader(dataset_root='/datasets/STL-10/train', resize=84, crop=64, 
+def data_loader(dataset_root='/datasets/STL-10', resize=84, crop=64, 
                 batch_size=64, num_workers=4, type='train'):    
     '''
     Data loader for MoCo. It is written assuming that 'ImageNet' dataset is used to train an encoder in 
@@ -244,12 +247,17 @@ def data_loader(dataset_root='/datasets/STL-10/train', resize=84, crop=64,
     transform = Transforms.Compose(transform_list)
     
     if type == 'encoder_train':
-        split = type.split('_')[-1] # 'train'
+        split = 'train+unlabeled' # 'train+unlabeled'
+        #split = 'train'
         dset = STL10_train(root=dataset_root, split=split, transform=transform, download=True)
     elif type == 'classifier_train' or type == 'classifier_test':
         split = type.split('_')[-1] # 'train' or 'test'
-        dset = Datasets.STL10(root=dataset_root, split=split, transform=transform, download=True)
+        train_bool = True if split == 'train' else False
         
+        #dset = Datasets.STL10(root=dataset_root, split=split, transform=transform, download=True)
+        #dset = Datasets.CIFAR100(root=dataset_root, train=train_bool, transform=transform, download=True)
+        dset = Datasets.CIFAR10(root=dataset_root, train=train_bool, transform=transform, download=True)
+            
     dlen = len(dset)
     dloader = DataLoader(dataset=dset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
     return dloader, dlen

@@ -17,5 +17,5 @@ class Resnet50(nn.Module):
         
     def forward(self, x):
         out = self.resnet(x)
-        norm = torch.linalg.norm(out, ord='fro', dim=1, keepdim=True)
+        norm = torch.norm(out, p='fro', dim=1, keepdim=True)
         return out / norm
