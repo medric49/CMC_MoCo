@@ -1,6 +1,7 @@
 import os
 import sys
 from PIL import Image
+from PIL import ImageFilter
 import random
 
 import torchvision.datasets as Datasets
@@ -200,6 +201,18 @@ class STL10_train(VisionDataset):
                 self.labels = self.labels[list_idx]
 
 
+class GaussianBlur(object):
+    """Gaussian blur augmentation in SimCLR https://arxiv.org/abs/2002.05709"""
+
+    def __init__(self, sigma=[.1, 2.]):
+        self.sigma = sigma
+
+    def __call__(self, x):
+        sigma = random.uniform(self.sigma[0], self.sigma[1])
+        x = x.filter(ImageFilter.GaussianBlur(radius=sigma))
+        return x
+
+
 def data_loader(dataset_root='/datasets/STL-10', resize=84, crop=64, 
                 batch_size=64, num_workers=4, type='train'):    
     '''
@@ -231,6 +244,7 @@ def data_loader(dataset_root='/datasets/STL-10', resize=84, crop=64,
         transform_list += [Transforms.RandomResizedCrop(size=crop),
                            Transforms.ColorJitter(0.1, 0.1, 0.1),
                            Transforms.RandomHorizontalFlip(),
+                           Transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.5),
                            Transforms.RandomGrayscale()]
     elif type == 'classifier_train':
         transform_list += [Transforms.Resize(size=resize),

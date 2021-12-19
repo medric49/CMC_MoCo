@@ -33,7 +33,7 @@ parser.add_argument('--trn_batch_size', type=int, default=256,
                     help='Batch size to train a linear classifier.')
 parser.add_argument('--tst_batch_size', type=int, default=100,
                     help='Batch size to evaluate a linear classifier.')
-parser.add_argument('--lr', type=float, default=10,
+parser.add_argument('--lr', type=float, default=20,
                     help='Learning rate to train a linear classifier.')
 parser.add_argument('--SGD_momentum', type=float, default=0.9,
                     help='Momentum of SGD optimizer to train a linear classifier.')
@@ -72,9 +72,9 @@ pprint.pprint(vars(config))
 print('\n======================================================================\n')
 
 # Make output directories
-loss_path = os.path.join(config.encoder_output_root, config.encoder_dataset_name, config.encoder_exp_version, 'eval_pretrained90/loss')
-accr_path = os.path.join(config.encoder_output_root, config.encoder_dataset_name, config.encoder_exp_version, 'eval_pretrained90/accr')
-weight_path = os.path.join(config.encoder_output_root, config.encoder_dataset_name, config.encoder_exp_version, 'eval_pretrained90/weight')
+loss_path = os.path.join(config.encoder_output_root, config.encoder_dataset_name, config.encoder_exp_version, 'eval_lr30_pre90/loss')
+accr_path = os.path.join(config.encoder_output_root, config.encoder_dataset_name, config.encoder_exp_version, 'eval_lr30_pre90/accr')
+weight_path = os.path.join(config.encoder_output_root, config.encoder_dataset_name, config.encoder_exp_version, 'eval_lr30_pre90/weight')
 
 if not os.path.exists(loss_path):
     os.makedirs(loss_path)
@@ -166,7 +166,7 @@ def update_lr(epoch):
     '''
 
     # Decay 0.1 times every 20 epoch.
-    factor = int(epoch / 20)
+    factor = int(epoch / 40)
     lr = config.lr * (0.2**factor)
 
     for param_group in optim_linear.param_groups:
