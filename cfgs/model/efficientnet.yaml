@@ -8,6 +8,3 @@ batch_size: 16
 num_enc_epochs: 50
 
 layer: 15
-
-im_norm_mean: [0.485, 0.456, 0.406]
-im_norm_std: [0.229, 0.224, 0.225]

@@ -9,7 +9,7 @@ from hydra.utils import to_absolute_path
 
 def load_stl10_enc_train_data(cfg):
     color_transfer = hydra.utils.instantiate(cfg.colorspace.translator)
-    normalize = torchvision.transforms.Normalize(mean=cfg.im_norm_mean, std=cfg.im_norm_std)
+    normalize = torchvision.transforms.Normalize(mean=cfg.colorspace.im_norm_mean, std=cfg.colorspace.im_norm_std)
 
     transform = torchvision.transforms.Compose([
         torchvision.transforms.RandomResizedCrop(cfg.image_size, scale=(cfg.low_crop, 1.0)),
@@ -30,7 +30,7 @@ def load_stl10_enc_train_data(cfg):
 
 def load_stl10_class_train_data(cfg):
     color_transfer = hydra.utils.instantiate(cfg.colorspace.translator)
-    normalize = torchvision.transforms.Normalize(mean=cfg.im_norm_mean, std=cfg.im_norm_std)
+    normalize = torchvision.transforms.Normalize(mean=cfg.colorspace.im_norm_mean, std=cfg.colorspace.im_norm_std)
 
     transform = torchvision.transforms.Compose([
         torchvision.transforms.Resize(cfg.image_size),
@@ -51,7 +51,7 @@ def load_stl10_class_train_data(cfg):
 
 def load_stl10_test_data(cfg):
     color_transfer = hydra.utils.instantiate(cfg.colorspace.translator)
-    normalize = torchvision.transforms.Normalize(mean=cfg.im_norm_mean, std=cfg.im_norm_std)
+    normalize = torchvision.transforms.Normalize(mean=cfg.colorspace.im_norm_mean, std=cfg.colorspace.im_norm_std)
     transform = torchvision.transforms.Compose([
         torchvision.transforms.Resize(cfg.image_size),
         color_transfer,

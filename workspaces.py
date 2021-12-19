@@ -23,11 +23,11 @@ class Workspace:
         self.class_train_dataset, self.class_train_dataloader = datasets.load_stl10_class_train_data(cfg)
         self.valid_dataset, self.valid_dataloader = datasets.load_stl10_test_data(cfg)
 
-        self.encoder = Encoder(self.cfg, device=utils.device())
+        self.encoder = Encoder(self.cfg).to(utils.device())
         self.global_enc_epoch = 0
         self.global_enc_min_loss = np.inf
 
-        self.classifier = Classifier(self.cfg, device=utils.device(), feature_dim=self.encoder.output_dim(self.cfg.layer))
+        self.classifier = Classifier(self.cfg, feature_dim=self.encoder.output_dim(self.cfg.layer))
         self.global_class_epoch = 0
         self.global_class_min_loss = np.inf
 
@@ -41,6 +41,7 @@ class Workspace:
             loader = tqdm(self.enc_train_dataloader)
             loader.set_postfix({'epoch': self.global_enc_epoch})
             for images, labels in loader:
+                images = images.to(device=utils.device(), dtype=torch.float)
                 loss = self.encoder.update(images)
 
                 n_samples += images.shape[0]
@@ -72,7 +73,10 @@ class Workspace:
             loader.set_postfix({'epoch': self.global_class_epoch})
             self.classifier.train()
             for images, labels in loader:
-                features = self.encoder(images, self.cfg.layer)
+                images = images.to(device=utils.device(), dtype=torch.float)
+                labels = labels.to(device=utils.device(), dtype=torch.long)
+                with torch.no_grad():
+                    features = self.encoder(images, self.cfg.layer)
                 loss, score = self.classifier.update(features, labels)
 
                 n_samples += images.shape[0]
@@ -95,6 +99,8 @@ class Workspace:
             loader.set_postfix({'epoch': self.global_class_epoch})
             self.classifier.eval()
             for images, labels in loader:
+                images = images.to(device=utils.device(), dtype=torch.float)
+                labels = labels.to(device=utils.device(), dtype=torch.long)
                 with torch.no_grad():
                     features = self.encoder(images, self.cfg.layer)
                 loss, score = self.classifier.evaluate(features, labels)
@@ -134,8 +140,8 @@ class Workspace:
         self.encoder.eval()
 
         if self.cfg.reset_classifier:
-            self.classifier = Classifier(self.cfg, device=utils.device(),
-                                         feature_dim=self.encoder.output_dim(self.cfg.layer))
+            self.classifier = Classifier(self.cfg,
+                                         feature_dim=self.encoder.output_dim(self.cfg.layer)).to(utils.device())
             self.global_class_epoch = 0
             self.global_class_min_loss = np.inf
 
