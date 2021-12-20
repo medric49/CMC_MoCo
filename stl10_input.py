@@ -43,6 +43,9 @@ TEST_DATA_PATH = './data/stl10_binary/test_X.bin'
 # path to the binary train file with labels
 TEST_LABEL_PATH = './data/stl10_binary/test_y.bin'
 
+# path to the binary train file with image data
+UNLABELED_DATA_PATH = './data/stl10_binary/unlabeled_X.bin'
+
 
 def read_labels(path_to_labels):
     """
@@ -164,3 +167,7 @@ if __name__ == "__main__":
     images = read_all_images(TEST_DATA_PATH)
     labels = read_labels(TEST_LABEL_PATH)
     save_images(images, labels, 'test')
+
+    images = read_all_images(UNLABELED_DATA_PATH)
+    labels = np.zeros(len(images), dtype=np.long)
+    save_images(images, labels, 'unlabeled')

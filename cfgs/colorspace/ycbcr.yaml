@@ -1,4 +1,7 @@
 translator:
   _target_: colorspaces.RGB2YCbCr
 
-view_depths: [1, 1, 1]
+view_depths: [1, 2]
+
+im_norm_mean: [116.151, 121.080, 132.342]
+im_norm_std: [109.500, 111.855, 111.964]

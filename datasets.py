@@ -20,7 +20,7 @@ def load_stl10_enc_train_data(cfg):
     ])
 
     train_dataset = torchvision.datasets.ImageFolder(
-        to_absolute_path((Path(cfg.stl10_dataset_path) / 'train')),
+        to_absolute_path((Path(cfg.stl10_dataset_path) / 'unlabeled')),
         transform=transform
     )
     train_dataloader = torch.utils.data.dataloader.DataLoader(

@@ -27,7 +27,7 @@ class Workspace:
         self.global_enc_epoch = 0
         self.global_enc_min_loss = np.inf
 
-        self.classifier = Classifier(self.cfg, feature_dim=self.encoder.output_dim(self.cfg.layer))
+        self.classifier = Classifier(self.cfg, feature_dim=self.encoder.output_dim(self.cfg.layer)).to(utils.device())
         self.global_class_epoch = 0
         self.global_class_min_loss = np.inf
 
@@ -61,6 +61,8 @@ class Workspace:
                 self.global_enc_min_loss = epoch_loss
                 self.save_min_loss_snapshot(ty='enc')
             self.global_enc_epoch += 1
+        if self.cfg.save_snapshot:
+            self.save_snapshot()
 
     def train_classifier(self):
         train_class_until_epoch = utils.Until(self.cfg.num_class_epochs)
@@ -126,6 +128,8 @@ class Workspace:
                 self.save_min_loss_snapshot(ty='class')
 
             self.global_class_epoch += 1
+        if self.cfg.save_snapshot:
+            self.save_snapshot()
 
     def train(self):
         if self.global_enc_epoch < self.cfg.num_enc_epochs:
