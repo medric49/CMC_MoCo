@@ -148,6 +148,8 @@ def get_accuracy():
 
             img = img.to(dev)
             label = label.to(dev)
+            
+            img = img.float()
             feature = feature_extractor(img)
             score = linear(feature.view(feature.size(0), feature.size(1)))
             pred = torch.argmax(score, dim=1, keepdim=True)
@@ -190,6 +192,7 @@ while(epoch < config.max_epoch):
         img = img.to(dev)
         label = label.to(dev)
         
+        img = img.float()
         feature = feature_extractor(img).detach()
         score = linear(feature.view(feature.size(0), feature.size(1)))
         loss = cross_entropy(score, label)

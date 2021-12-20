@@ -75,6 +75,10 @@ parser.add_argument('--resume', action='store_true',
 parser.add_argument('--start_epoch', type=int, default=0,
                     help='Training is resumed at this epoch.')
 
+
+# add new views for CMC implementation
+parser.add_argument('--view', type=str, default='Lab', choices=['Lab', 'YCbCr'])
+
 config = parser.parse_args()
 
 # Show config
@@ -110,7 +114,7 @@ dloader, dlen = data_loader(dataset_root=config.dataset_root,
                             crop=config.crop, 
                             batch_size=config.batch_size,
                             num_workers=config.num_workers,
-                            type='encoder_train')
+                            type='encoder_train', view=config.view)
 
 # Build models
 print('\n[2 / 3] Build models... ')
@@ -195,6 +199,7 @@ queue = []
 
 with torch.no_grad():
     for i, (_, img, _) in enumerate(dloader):
+        img = img.float()
         key_feature = momentum_encoder(img.to(dev))
         queue.append(key_feature)
 
@@ -221,8 +226,11 @@ while(epoch < config.max_epoch):
             x_k = x_k[idx]
             
         # x_q, x_k : (N, 3, 64, 64)            
+        x_q = x_q.float()
+        x_k = x_k.float()
         x_q, x_k = x_q.to(dev), x_k.to(dev)
-
+        
+        
         q = encoder(x_q) # q : (N, 128)
         k = momentum_encoder(x_k).detach() # k : (N, 128)
         

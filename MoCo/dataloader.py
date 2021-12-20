@@ -16,6 +16,8 @@ from typing import Any, Callable, Optional, Tuple
 
 from torchvision.datasets.utils import check_integrity, download_and_extract_archive, verify_str_arg
 
+from colorspace import RGB2Lab, RGB2YCbCr, RGB2YDbDr
+
 
 # The following class STL10_train is the method derived from torch.datasets and modified in such a way that it outputs two different augmentations of the image instead of one. 
 # The modification is made in __getitem__ function
@@ -214,7 +216,7 @@ class GaussianBlur(object):
 
 
 def data_loader(dataset_root='/datasets/STL-10', resize=84, crop=64, 
-                batch_size=64, num_workers=4, type='train'):    
+                batch_size=64, num_workers=4, type='train', view=None):    
     '''
     Data loader for MoCo. It is written assuming that 'ImageNet' dataset is used to train an encoder in 
     self-supervised manner, and 'STL-10' dataset is used to evaluate the encoder.
@@ -240,23 +242,80 @@ def data_loader(dataset_root='/datasets/STL-10', resize=84, crop=64,
     '''
 
     transform_list = []
+    
     if type == 'encoder_train':
-        transform_list += [Transforms.RandomResizedCrop(size=crop),
+        
+        if view is None:
+            
+            transform_list += [Transforms.RandomResizedCrop(size=crop),
                            Transforms.ColorJitter(0.1, 0.1, 0.1),
                            Transforms.RandomHorizontalFlip(),
                            Transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.5),
                            Transforms.RandomGrayscale()]
+            
+            transform_list += [Transforms.ToTensor(),
+                       Transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))]
+        
+        elif view == 'Lab':
+            
+            mean = [(0 + 100) / 2, (-86.183 + 98.233) / 2, (-107.857 + 94.478) / 2]
+            std = [(100 - 0) / 2, (86.183 + 98.233) / 2, (107.857 + 94.478) / 2]
+            color_transfer = RGB2YDbDr()
+            
+            transform_list += [Transforms.RandomResizedCrop(size=crop),
+                           Transforms.ColorJitter(0.1, 0.1, 0.1),
+                           Transforms.RandomHorizontalFlip(),
+                           Transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.5),
+                           color_transfer,
+                           Transforms.RandomGrayscale()]
+            
+            transform_list += [Transforms.ToTensor(),
+                       Transforms.Normalize(mean=mean, std=std)]
+        
+        elif view == 'YCbCr':
+            
+            mean = [116.151, 121.080, 132.342]
+            std = [109.500, 111.855, 111.964]
+            color_transfer = RGB2YCbCr()
+            
+            transform_list += [Transforms.RandomResizedCrop(size=crop),
+                           Transforms.RandomHorizontalFlip(),
+                           color_transfer]
+            
+            transform_list += [Transforms.ToTensor(),
+                       Transforms.Normalize(mean=mean, std=std)]
+            
+                                            
     elif type == 'classifier_train':
+    
+        mean = [(0 + 100) / 2, (-86.183 + 98.233) / 2, (-107.857 + 94.478) / 2]
+        std = [(100 - 0) / 2, (86.183 + 98.233) / 2, (107.857 + 94.478) / 2]
+        color_transfer = RGB2YDbDr()
+        
         transform_list += [Transforms.Resize(size=resize),
                            Transforms.RandomCrop(size=crop),
-                           Transforms.RandomHorizontalFlip()]
+                           Transforms.RandomHorizontalFlip(),
+                           color_transfer]
+        
+        transform_list += [Transforms.ToTensor(),
+                       Transforms.Normalize(mean=mean,
+                                            std=std)]
+        
     elif type == 'classifier_test':
+    
+        mean = [(0 + 100) / 2, (-86.183 + 98.233) / 2, (-107.857 + 94.478) / 2]
+        std = [(100 - 0) / 2, (86.183 + 98.233) / 2, (107.857 + 94.478) / 2]
+        color_transfer = RGB2YDbDr()
+        
         transform_list += [Transforms.Resize(size=resize),
-                           Transforms.CenterCrop(size=crop)]
+                           Transforms.CenterCrop(size=crop),
+                           color_transfer]
+        
+        transform_list += [Transforms.ToTensor(),
+                       Transforms.Normalize(mean=mean,
+                                            std=std)]
 
-    transform_list += [Transforms.ToTensor(),
-                       Transforms.Normalize(mean=(0.5, 0.5, 0.5),
-                                            std=(0.5, 0.5, 0.5))]
+    
 
     transform = Transforms.Compose(transform_list)
     
@@ -268,9 +327,9 @@ def data_loader(dataset_root='/datasets/STL-10', resize=84, crop=64,
         split = type.split('_')[-1] # 'train' or 'test'
         train_bool = True if split == 'train' else False
         
-        #dset = Datasets.STL10(root=dataset_root, split=split, transform=transform, download=True)
+        dset = Datasets.STL10(root=dataset_root, split=split, transform=transform, download=True)
         #dset = Datasets.CIFAR100(root=dataset_root, train=train_bool, transform=transform, download=True)
-        dset = Datasets.CIFAR10(root=dataset_root, train=train_bool, transform=transform, download=True)
+        #dset = Datasets.CIFAR10(root=dataset_root, train=train_bool, transform=transform, download=True)
             
     dlen = len(dset)
     dloader = DataLoader(dataset=dset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
